@@ -46,7 +46,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
-        User user = userRepository.findUserByEmail(userName);
+        User user = userRepository.findUserByUserName(userName);
         log.debug(userName);
         if (user == null) {
             log.warn("Invalid username or password {}", userName);
@@ -73,7 +73,14 @@ public class UserServiceImpl implements UserService {
         User user = modelMapper.map(userDTO, User.class);
 
         user.setPassword(encoder.encode(user.getPassword()));
-        user.setRoles(Arrays.asList(roleService.findRoleByRoleName("ROLE_USER")));
+
+        Role userRole = roleService.findRoleByRoleName("ROLE_USER");
+        if (userRole == null) {
+            Role role = new Role();
+            role.setName("ROLE_USER");
+            userRole = roleService.saveRole(role);
+        }
+        user.setRoles(Arrays.asList(userRole));
 
         userRepository.save(user);
     }
